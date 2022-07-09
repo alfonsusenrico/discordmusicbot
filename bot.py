@@ -104,12 +104,12 @@ async def play(ctx, url):
         await ctx.send("Something happened, please try again")
 
     else:
-        waitMsg = await ctx.send("Please wait...")
+        # waitMsg = await ctx.send("Please wait...")
         if ctx.voice_client is None:
             vc = await voice_channel.connect()
         else:
             vc = ctx.voice_client
-        await waitMsg.delete()
+        # await waitMsg.delete()
         await play_song(vc, ctx, selected) 
 
 @bot.command()
@@ -149,13 +149,13 @@ async def search(ctx, *music):
         try:
             voice_channel = message.author.voice.channel
             number = int(message.content)
-            waitMsg = await ctx.send("Please wait...")
+            # waitMsg = await ctx.send("Please wait...")
             selected = search.results[number-1].streams.filter(only_audio=True).desc().first().download()
             if ctx.voice_client is None:
                 vc = await voice_channel.connect()
             else:
                 vc = ctx.voice_client
-            await waitMsg.delete()
+            # await waitMsg.delete()
             await play_song(vc, ctx, selected)
 
         except AttributeError as e:
