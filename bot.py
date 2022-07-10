@@ -30,10 +30,11 @@ def getSongName(filepath):
 def play_next(voice_channel, ctx, media=None):
     global removed
 
-    if voice_channel.is_playing():
-        voice_channel.stop()
+    # if voice_channel.is_playing():
+    #     voice_channel.stop()
     
     try:
+        voice_channel.stop()
         os.remove(removed)
     except Exception as e:
         pass
@@ -166,9 +167,11 @@ async def search(ctx, *music):
 
         except pytube.exceptions.PytubeError as e:
             await ctx.send("Something happened, please try again")
+            print(e)
 
         except Exception as e:
-            await ctx.send("Something happened, please try again")          
+            await ctx.send("Something happened, please try again")
+            print(e)          
 
 @bot.command()
 async def q(ctx):
