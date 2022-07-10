@@ -1,3 +1,4 @@
+##imports
 import asyncio
 import discord
 import dotenv
@@ -12,43 +13,19 @@ from pytube import Search
 from pytube import YouTube
 from time import sleep
 
+##dotenv
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 PATH = os.getenv('PROJECTPATH')
-
-# bot = commands.Bot(command_prefix='!', activity=discord.Activity(type=discord.ActivityType.watching, name="my Ex"), status=discord.Status.online)
-bot = commands.Bot(command_prefix='!')
 
 ##global vars
 queue = []
 removed = None
 
-@bot.event
-async def on_ready():
-    print("Bot running")
-    bot.loop.create_task(status_task())
-
-async def status_task():
-    while True:
-        load_dotenv(override=True)
-        STATUS = os.getenv('STATUS')
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(json.loads(STATUS))))
-        await asyncio.sleep(10)
-
 def getSongName(filepath):
     filepath = filepath.replace(PATH, "")
     filepath = filepath.replace(".webm", "")
     return filepath
-
-async def play_song(voice_channel, ctx, media):
-    if voice_channel.is_playing():
-        queue.append(media)
-        await ctx.send('Song Queued: {}'.format(getSongName(media)))
-    else:
-        global removed
-        removed = media
-        voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=media), after=lambda e: play_next(voice_channel, ctx, media))
-        await ctx.send("Now Playing: {}".format(getSongName(media)))
 
 def play_next(voice_channel, ctx, media=None):
     global removed
@@ -74,8 +51,35 @@ def play_next(voice_channel, ctx, media=None):
                 asyncio.run_coroutine_threadsafe(voice_channel.disconnect(), bot.loop)
                 asyncio.run_coroutine_threadsafe(ctx.send("Leaving channel because there's no more life here"), bot.loop)
 
-##bot commands(play, search, queue, remove, skip, pause, resume)
+async def play_song(voice_channel, ctx, media):
+    if voice_channel.is_playing():
+        queue.append(media)
+        await ctx.send('Song Queued: {}'.format(getSongName(media)))
+    else:
+        global removed
+        removed = media
+        voice_channel.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=media), after=lambda e: play_next(voice_channel, ctx, media))
+        await ctx.send("Now Playing: {}".format(getSongName(media)))
 
+async def status_task():
+    while True:
+        load_dotenv(override=True)
+        STATUS = os.getenv('STATUS')
+        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=random.choice(json.loads(STATUS))))
+        await asyncio.sleep(10)
+
+##bot events
+bot = commands.Bot(command_prefix='!')
+@bot.event
+async def on_ready():
+    print("Bot running")
+    bot.loop.create_task(status_task())
+
+@bot.event
+async def on_guild_join(guild):
+    print("{} - {}".format(guild.id, guild.name))
+
+##bot commands(play, search, queue, remove, skip, pause, resume)
 @bot.command()
 async def play(ctx, url):
     try:
@@ -84,7 +88,6 @@ async def play(ctx, url):
         yt = YouTube(url)
         selected = yt.streams.filter(only_audio=True).desc().first().download()
         
-
     except pytube.exceptions.LiveStreamError as e:
         await ctx.send("Cannot play livestream video!")
 
@@ -248,9 +251,12 @@ async def status(ctx, *message):
             await ctx.send("**{}** has been *added* to status!".format(str(''.join(message))))
 
 ##debugging command
-# @bot.command()
-# async def test(ctx, *message):
+@bot.command()
+async def test(ctx, *message):
+    print(ctx)
+    print(ctx.author)
+    print(ctx.guild.id)
+    print(ctx.channel)
 
-    
-
+##run bot
 bot.run(TOKEN)
